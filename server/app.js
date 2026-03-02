@@ -70,7 +70,7 @@ app.post('/api/post', (req, res) => {
     }
 
     if (fs.existsSync('./postId.txt')) {
-        const id = fs.readFileSync('./id.txt', 'utf-8');
+        const id = fs.readFileSync('./postId.txt', 'utf-8');
         let next_id = Number(id);
         next_id++;
         fs.writeFileSync('./postId.txt', String(next_id));
@@ -128,7 +128,7 @@ app.post('/api/register', (req, res) => {
 
     fs.writeFileSync('./users.json', JSON.stringify(users, null, 2));
 
-    res.redirect('/');
+    res.redirect(`/?user=${user.username}`);
 });
 
 app.post('/api/login', (req, res) => {
@@ -166,7 +166,7 @@ app.post('/api/login', (req, res) => {
             });
     }
 
-    res.redirect('/');
+    res.redirect(`/?user=${existing_user.username}`);
 
 });
 
