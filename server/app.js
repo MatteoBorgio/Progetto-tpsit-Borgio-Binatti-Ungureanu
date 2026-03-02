@@ -16,6 +16,91 @@ app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
+// prendo i post dal file json e li mando al client
+app.get('/posts', (req, res) => {
+    if (!fs.existsSync('./posts.json')) {
+        return res
+            .status(400)
+            .json({
+                success: false,
+                error: "Non esiste alcun Post."
+            })
+    }
+
+    const data = fs.readFileSync('./posts.json', 'utf-8');
+    const posts = JSON.parse(data); // trasforma un oggetto json in un array
+
+    if (!posts) {
+        return res
+            .status(400)
+            .json({
+                success: false,
+                error: "Non esiste alcun Post."
+            })
+    }
+
+    return res
+        .status(200)
+        .json({
+            success: true,
+            posts: posts
+        });
+});
+
+app.post('/api/post', (req, res) => {
+    const post = req.body;
+
+    if (!post) {
+        return res
+            .status(400)
+            .json({
+                success: false,
+                message: "Post fallito"
+            });
+    }
+
+    let posts = [];
+
+    if (fs.existsSync('./posts.json')) {
+        const data = fs.readFileSync('./posts.json', 'utf-8');
+        posts = JSON.parse(data);
+    }
+    if (!Array.isArray(posts)) {
+        posts = [];
+    }
+
+    if (fs.existsSync('./id.txt')) {
+        const id = fs.readFileSync('./id.txt', 'utf-8');
+        let next_id = Number(id);
+        next_id++;
+        fs.writeFileSync('./id.txt', String(next_id));
+    } else {
+        const start_id = 0;
+        fs.writeFileSync('./id.txt', String(start_id));
+    }
+
+    const actual_id = fs.readFileSync('./id.txt', 'utf-8');
+    post.id = Number(actual_id);
+
+    const check_if_post_exist = posts.find(p => p.title === post.title && p.content === post.content);
+
+    if (check_if_post_exist) {
+        return res
+            .status(400)
+            .json({
+                success: false,
+                message: "Il post già esiste"
+            });
+    }
+
+    posts.push(post);
+
+    fs.writeFileSync('./posts.json', JSON.stringify(posts, null, 2));
+
+    res.redirect('/');
+});
+
+
 app.post('/api/register', (req, res) => {
     const user = req.body;
 
@@ -50,17 +135,6 @@ app.post('/api/register', (req, res) => {
 
     const actual_id = fs.readFileSync('./id.txt', 'utf-8');
     user.id = Number(actual_id);
-
-    const check_if_user_exist = users.find(u => u.name === user.name && u.email === user.email);
-
-    if (check_if_user_exist) {
-        return res
-            .status(400)
-            .json({
-               success: false,
-               message: "L'utente già esiste"
-            });
-    }
 
     users.push(user);
 
@@ -99,8 +173,8 @@ app.post('/api/login', (req, res) => {
         return res
             .status(404)
             .json({
-               success: false,
-               message: "Utente non trovato"
+                success: false,
+                message: "Utente non trovato"
             });
     }
 
@@ -113,5 +187,5 @@ app.use((req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log("Server attivo sulla porta " + PORT)
+    console.log("Server attivo sulla porta " + PORT + " http://localhost:" + PORT);
 });
