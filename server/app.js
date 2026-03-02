@@ -111,6 +111,20 @@ app.post('/api/register', (req, res) => {
         users = [];
     }
 
+    const data = fs.readFileSync('./users.json', 'utf-8');
+    const users_data = JSON.parse(data);
+
+    const existing_user = users_data.find(u => u.name === user.name && u.email === user.email);
+
+    if (existing_user) {
+        return res
+            .status(404)
+            .json({
+                success: false,
+                message: "Utente già esistente"
+            });
+    }
+
     if (fs.existsSync('./id.txt')) {
         const id = fs.readFileSync('./id.txt', 'utf-8');
         let next_id = Number(id);
@@ -128,7 +142,11 @@ app.post('/api/register', (req, res) => {
 
     fs.writeFileSync('./users.json', JSON.stringify(users, null, 2));
 
-    res.redirect(`/?user=${user.username}`);
+    res.status(200).json({
+        success: true,
+        name: user.username
+    });
+
 });
 
 app.post('/api/login', (req, res) => {
@@ -166,7 +184,10 @@ app.post('/api/login', (req, res) => {
             });
     }
 
-    res.redirect(`/?user=${existing_user.username}`);
+    res.status(200).json({
+        success: true,
+        name: existing_user.username
+    });
 
 });
 
