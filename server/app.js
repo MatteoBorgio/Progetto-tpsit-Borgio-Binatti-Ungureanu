@@ -69,29 +69,18 @@ app.post('/api/post', (req, res) => {
         posts = [];
     }
 
-    if (fs.existsSync('./id.txt')) {
+    if (fs.existsSync('./postId.txt')) {
         const id = fs.readFileSync('./id.txt', 'utf-8');
         let next_id = Number(id);
         next_id++;
-        fs.writeFileSync('./id.txt', String(next_id));
+        fs.writeFileSync('./postId.txt', String(next_id));
     } else {
         const start_id = 0;
-        fs.writeFileSync('./id.txt', String(start_id));
+        fs.writeFileSync('./postId.txt', String(start_id));
     }
 
-    const actual_id = fs.readFileSync('./id.txt', 'utf-8');
+    const actual_id = fs.readFileSync('./postId.txt', 'utf-8');
     post.id = Number(actual_id);
-
-    const check_if_post_exist = posts.find(p => p.title === post.title && p.content === post.content);
-
-    if (check_if_post_exist) {
-        return res
-            .status(400)
-            .json({
-                success: false,
-                message: "Il post già esiste"
-            });
-    }
 
     posts.push(post);
 
@@ -99,7 +88,6 @@ app.post('/api/post', (req, res) => {
 
     res.redirect('/');
 });
-
 
 app.post('/api/register', (req, res) => {
     const user = req.body;
