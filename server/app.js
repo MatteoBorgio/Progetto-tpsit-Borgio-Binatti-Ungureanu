@@ -81,6 +81,7 @@ app.post('/api/post', (req, res) => {
 
     const actual_id = fs.readFileSync('./postId.txt', 'utf-8');
     post.id = Number(actual_id);
+    post.comments = [];
 
     posts.push(post);
 
@@ -148,6 +149,47 @@ app.post('/api/register', (req, res) => {
     });
 
 });
+
+app.post('/api/comment', (req, res) => {
+    const { post_id, comment, autore } = req.body;
+
+    if (!post_id) {
+        return res
+            .status(400)
+            .json({
+                success: false,
+                message: "Deve essere specificato un id di un post valido"
+            });
+    }
+
+    const data = fs.readFileSync('./posts.json', 'utf-8');
+    const posts = JSON.parse(data);
+
+    const post = posts.find(p => p.id === Number(post_id));
+
+    if (!post) {
+        return res
+            .status(401)
+            .json({
+                success: false,
+                message: "Post non trovato"
+            });
+    }
+
+    post.comments.push({
+        commento: comment,
+        autore: autore
+    });
+
+    fs.writeFileSync('./posts.json', JSON.stringify(posts, null, 2));
+
+    return res
+        .status(200)
+        .json({
+            success: true,
+            message: "Commento aggiunto con successo"
+        });
+})
 
 app.post('/api/login', (req, res) => {
     const user = req.body;
