@@ -16,6 +16,38 @@ app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
+app.get('/posts/:id/comments', (req, res) => {
+    const postId = Number(req.params.id);
+
+    if (!fs.existsSync('./posts.json')) {
+        return res
+            .status(200)
+            .json({
+            success: true,
+            comments: []
+            });
+    }
+
+    const data = fs.readFileSync('./posts.json', 'utf-8');
+    const posts = JSON.parse(data);
+
+    const post = posts.find(p => p.id === postId);
+
+    if (!post) {
+        return res
+            .status(404)
+            .json({
+                success: false,
+                message: "Post non trovato"
+            })
+    }
+
+    return res.json({
+        success: true,
+        comments: post.comments || []
+    });
+})
+
 // prendo i post dal file json e li mando al client
 app.get('/posts', (req, res) => {
     if (!fs.existsSync('./posts.json')) {
@@ -75,7 +107,7 @@ app.post('/api/post', (req, res) => {
         next_id++;
         fs.writeFileSync('./postId.txt', String(next_id));
     } else {
-        const start_id = 0;
+        const start_id = 1;
         fs.writeFileSync('./postId.txt', String(start_id));
     }
 
@@ -112,10 +144,7 @@ app.post('/api/register', (req, res) => {
         users = [];
     }
 
-    const data = fs.readFileSync('./users.json', 'utf-8');
-    const users_data = JSON.parse(data);
-
-    const existing_user = users_data.find(u => u.name === user.name && u.email === user.email);
+    const existing_user = users.find(u => u.name === user.name && u.email === user.email);
 
     if (existing_user) {
         return res
@@ -132,7 +161,7 @@ app.post('/api/register', (req, res) => {
         next_id++;
         fs.writeFileSync('./id.txt', String(next_id));
     } else {
-        const start_id = 0;
+        const start_id = 1;
         fs.writeFileSync('./id.txt', String(start_id));
     }
 
@@ -153,13 +182,15 @@ app.post('/api/register', (req, res) => {
 app.post('/api/comment', (req, res) => {
     const { post_id, comment, autore } = req.body;
 
-    if (!post_id) {
-        return res
-            .status(400)
-            .json({
-                success: false,
-                message: "Deve essere specificato un id di un post valido"
-            });
+    if (!post_id || !comment) {
+        return res.status(400).json({
+            success: false,
+            message: "Dati incompleti: post_id o commento mancanti."
+        });
+    }
+
+    if (!fs.existsSync('./posts.json')) {
+        return res.status(500).json({ success: false, message: "Database non trovato" });
     }
 
     const data = fs.readFileSync('./posts.json', 'utf-8');
@@ -168,28 +199,23 @@ app.post('/api/comment', (req, res) => {
     const post = posts.find(p => p.id === Number(post_id));
 
     if (!post) {
-        return res
-            .status(401)
-            .json({
-                success: false,
-                message: "Post non trovato"
-            });
+        return res.status(404).json({ success: false, message: "Post non trovato" });
     }
+
+    if (!post.comments) post.comments = [];
 
     post.comments.push({
         commento: comment,
-        autore: autore
+        autore: autore || "Anonimo"
     });
 
     fs.writeFileSync('./posts.json', JSON.stringify(posts, null, 2));
 
-    return res
-        .status(200)
-        .json({
-            success: true,
-            message: "Commento aggiunto con successo"
-        });
-})
+    return res.status(200).json({
+        success: true,
+        message: "Commento aggiunto con successo"
+    });
+});
 
 app.post('/api/login', (req, res) => {
     const user = req.body;

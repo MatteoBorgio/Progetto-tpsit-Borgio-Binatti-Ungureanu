@@ -175,13 +175,64 @@
     }
 
     async function sendComment(post_id) {
-        // Logica futura per l'invio
+        const commentInput = document.getElementById(`risposta${post_id}`);
+        const comment = commentInput.value;
+        const user = findActualUser();
+
+        if (!comment.trim()) return;
+
+        const response = await fetch('/api/comment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                post_id: post_id,
+                comment: comment,
+                autore: user
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            commentInput.value = "";
+            const collapseElement = document.getElementById(`replyForm${post_id}`);
+            bootstrap.Collapse.getInstance(collapseElement).hide();
+            await renderComments(post_id);
+        }
     }
 
     async function renderComments(post_id) {
-        // Logica futura per la visualizzazione nella modale #commentsModal
+        const modalElement = document.getElementById('commentsModal');
+        const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+        modal.show();
+
+        const container = document.getElementById('commentsListContainer');
+        container.innerHTML = "<p class='text-center'>Caricamento...</p>";
+
+        const response = await fetch(`/posts/${post_id}/comments`);
+        const data = await response.json();
+
+        if (!data.success) {
+            container.innerHTML = "<p class='text-center text-danger'>Errore nel caricamento.</p>";
+            return;
+        }
+
+        container.innerHTML = "";
+        if (!data.comments || data.comments.length === 0) {
+            container.innerHTML = "<p class='text-center text-muted'>Nessun commento presente.</p>";
+            return;
+        }
+
+        data.comments.forEach(c => {
+            container.innerHTML += `
+            <div class="mb-3 border-bottom pb-2">
+                <small class="fw-bold text-primary">${c.autore}</small>
+                <p class="mb-0 text-dark">${c.commento}</p>
+            </div>`;
+        });
     }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
