@@ -91,6 +91,10 @@
     // funzione che ricerca nei parametri get il nome dello user, se non lo trova lo considera anonimo
     function findActualUser() {
         const urlParams = new URLSearchParams(window.location.search);
+        // se l'utente non esiste, reindirizziamolo alla pagina di registrazione
+        if (!urlParams.get('user')) {
+            window.location.href = '/register';
+        }
         return urlParams.get('user') || "Utente anonimo";
     }
 
