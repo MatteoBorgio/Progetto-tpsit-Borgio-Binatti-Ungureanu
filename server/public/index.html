@@ -141,10 +141,7 @@
         const data = await response.json();
 
         // se non è andata in porto, mandiamo un alert all'utente
-        if (!data.success) {
-            alert("Errore: " + data.error);
-            return;
-        }
+        if (!data.success) return;
 
         container.innerHTML = "";
         // renderizziamo per ogni post l'html rispettivo, riordinando i post in ordine cronologico
