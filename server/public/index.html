@@ -140,7 +140,6 @@
         const response = await fetch('/posts');
         const data = await response.json();
 
-        // se non è andata in porto, mandiamo un alert all'utente
         if (!data.success) return;
 
         container.innerHTML = "";
@@ -218,7 +217,7 @@
         // verifica che tutto sia andato in porto correttamente
         if (data.success) {
             commentInput.value = "";
-            // apriamo il modale delle riposte specifico al post
+            // apriamo il modale delle risposte specifico al post
             const collapseElement = document.getElementById(`replyForm${post_id}`);
             bootstrap.Collapse.getInstance(collapseElement).hide();
             // renderizziamo i commenti aggiornati
